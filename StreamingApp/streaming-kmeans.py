@@ -18,15 +18,13 @@ if __name__ == "__main__":
     # Kafka Stream
     ks = KafkaUtils.createDirectStream(ssc, ["test"], {"metadata.broker.list": "localhost:9092"})
 
-    # training data for File
     trainingData = sc.textFile("data/datatraining.txt")\
         .map(lambda line: line.split(',')[2:-1]).map(lambda arr: Vectors.dense([float(x) for x in arr]))
 
     # Supplied to Streaming KMeans as the centers by StreamingKmeans are not giving good predictions
     init_centers = KMeans.train(trainingData, 2).centers
 
-    # We create a model with random clusters and specify the number of clusters to find
-    model = StreamingKMeans(k=2, decayFactor=0.4)\
+    model = StreamingKMeans(k=2, decayFactor=0.1)\
         .setInitialCenters(init_centers, [1.0, 1.0, 1.0, 1.0, 1.0])
 
     model.trainOn(ssc.queueStream([trainingData]))
